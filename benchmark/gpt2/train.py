@@ -1,7 +1,7 @@
 import argparse
 import time
 
-from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
 import cubework
 import torch
 from cubework.distributed import ParallelManager as pm
