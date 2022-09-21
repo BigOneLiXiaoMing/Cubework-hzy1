@@ -1,6 +1,7 @@
 import argparse
 import time
 
+from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 import cubework
 import torch
 from cubework.distributed import ParallelManager as pm
@@ -344,6 +345,7 @@ def train():
 
     if pm.DATA.world_size > 1:
         model = DDP(model, process_group=pm.DATA.group)
+        model = FSDP(model)
 
     global scaler
     if args.use_mixed_precision:
