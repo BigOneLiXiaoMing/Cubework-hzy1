@@ -345,7 +345,7 @@ def train():
 
     if pm.DATA.world_size > 1:
         model = DDP(model, process_group=pm.DATA.group)
-        model = FSDP(model)
+        model = FSDP(model, process_group=pm.DATA.group)
 
     global scaler
     if args.use_mixed_precision:
