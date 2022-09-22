@@ -1,7 +1,7 @@
 import math
 from functools import partial
 from typing import Callable
-
+from cubework.distributed import ParallelManager as pm
 import cubework.module as cube_nn
 import torch
 from cubework.utils import get_current_device, get_dataloader, get_logger
@@ -9,6 +9,8 @@ from datasets import load_from_disk
 from torch import dtype, nn
 from transformers import GPT2Tokenizer
 from transformers.optimization import get_linear_schedule_with_warmup
+from torch.nn.parallel import DistributedDataParallel as DDP
+from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 
 
 class GPT2Embedding(nn.Module):
@@ -405,6 +407,11 @@ def build_model(args):
     logger = get_logger()
     model_func = globals()[args.model_name]
     model = model_func(max_position_embeddings=args.seq_length, checkpoint=args.use_activation_checkpoint)
+
+    if pm.DATA.world_size > 1:
+        model = DDP(model, process_group=pm.DATA.group)
+        model = FSDP(model)
+
     logger.info("Model is built.")
     return model
 
@@ -474,6 +481,7 @@ def build_scheduler(args, n_steps, optimizer):
 
 def build_gpt2(args):
     model = build_model(args)
+
 
     train_data, test_data = build_data(args)
 
