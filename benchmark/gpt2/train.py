@@ -1,7 +1,6 @@
 import argparse
 import time
 
-from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
 import cubework
 import torch
 from cubework.distributed import ParallelManager as pm
@@ -340,12 +339,18 @@ def train():
     if args.log_file is not None:
         write_logger_to_file(args.log_file)
 
+
+
     global model, train_data, test_data, criterion, metric, optimizer, lr_scheduler
     model, train_data, test_data, criterion, metric, optimizer, lr_scheduler = build_gpt2(args)
 
-    if pm.DATA.world_size > 1:
-        model = DDP(model, process_group=pm.DATA.group)
-        model = FSDP(model, process_group=pm.DATA.group)
+    # if pm.DATA.world_size > 1:
+    #     model = DDP(model, process_group=pm.DATA.group)
+
+    with torch.cuda.amp.autocast():
+        x = (torch.randint(1024, (args.batch_size, args.seq_length)).to(get_current_device()),
+             torch.ones((args.batch_size, args.seq_length), dtype=torch.long).to(get_current_device()))
+        model = torch.jit.trace(model, x)
 
     global scaler
     if args.use_mixed_precision:
