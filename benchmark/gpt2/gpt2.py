@@ -410,7 +410,7 @@ def build_model(args):
 
     if pm.DATA.world_size > 1:
         model = DDP(model, process_group=pm.DATA.group)
-        model = FSDP(model)
+#         model = FSDP(model)
 
     logger.info("Model is built.")
     return model
